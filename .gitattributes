@@ -1,0 +1,4 @@
+* text=auto
+
+# Store generated CSVs byte-for-byte: the CRLF row endings and the CR/LF inside quoted source values are data.
+*.csv -text

@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oris JewelCloud Export</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column. Spec-sheet masthead, a KPI strip, then stacked sections; value charts sit in an auto-fit grid. */
+:root {
+  --bg: #f4f5f5;
+  --surface: #fcfcfc;
+  --ink: #101314;
+  --ink-2: #4c5356;
+  --muted: #5f666a;
+  --rule: #dde1e2;
+  --chip: #eceff0;
+  --tint: #e1ecfa;
+  --track: #d9e7f8;
+  --blank: #b4bbbe;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1011;
+    --surface: #181b1c;
+    --ink: #eef0f0;
+    --ink-2: #c3c8ca;
+    --muted: #9aa1a4;
+    --rule: #2a2f31;
+    --chip: #23282a;
+    --tint: #1b2c42;
+    --track: #1e3047;
+    --blank: #4f5659;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1011;
+  --surface: #181b1c;
+  --ink: #eef0f0;
+  --ink-2: #c3c8ca;
+  --muted: #9aa1a4;
+  --rule: #2a2f31;
+  --chip: #23282a;
+  --tint: #1b2c42;
+  --track: #1e3047;
+  --blank: #4f5659;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+code, .mono { font-family: var(--font-mono); font-size: 0.92em; }
+:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; border-radius: 2px; }
+
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding-block: 2.5rem 3.5rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 3rem;
+}
+
+/* Masthead */
+.masthead { display: grid; gap: 0.75rem; }
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.4rem);
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.run-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; margin: 0.25rem 0 0; }
+.run-meta div { min-width: 0; }
+.run-meta dt { font-size: 0.75rem; color: var(--muted); }
+.run-meta dd { margin: 0; font-family: var(--font-mono); font-size: 0.8125rem; overflow-wrap: anywhere; }
+
+/* KPI strip */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.kpi { background: var(--surface); padding: 1rem 1.25rem 1.1rem; display: grid; gap: 0.15rem; }
+.kpi-label { font-size: 0.8125rem; color: var(--ink-2); }
+.kpi-value { font-size: 2rem; font-weight: 600; line-height: 1.2; }
+.kpi-value small { font-size: 1rem; font-weight: 500; color: var(--muted); margin-left: 0.2rem; }
+.kpi-note { font-size: 0.8125rem; color: var(--muted); }
+
+/* Sections */
+section { display: grid; gap: 1rem; min-width: 0; }
+.section-head { display: grid; gap: 0.35rem; }
+h2 { margin: 0; font-size: 1.25rem; font-weight: 600; text-wrap: balance; }
+h3 { margin: 0; font-size: 0.9375rem; font-weight: 600; }
+.lede { margin: 0; color: var(--ink-2); max-width: 65ch; }
+.note { margin: 0; color: var(--muted); font-size: 0.8125rem; max-width: 65ch; }
+.panel {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 1rem 1.25rem 1.25rem;
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+  min-width: 0;
+}
+.panel figcaption { display: grid; gap: 0.2rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem; }
+
+/* Filter control */
+.filters { display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0.2rem; background: var(--chip); border-radius: 8px; width: fit-content; max-width: 100%; }
+.filters button {
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+}
+.filters button:hover { color: var(--ink); }
+.filters button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 500; box-shadow: 0 0 0 1px var(--rule); }
+.filters .count { color: var(--muted); margin-left: 0.3rem; font-variant-numeric: tabular-nums; }
+
+/* Coverage list */
+.cov-list { padding-block: 0.25rem 0; }
+.cov-row {
+  display: grid;
+  grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr) 4.5rem;
+  column-gap: 1.25rem;
+  row-gap: 0.2rem;
+  align-items: center;
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--rule);
+}
+.cov-row:first-child { border-top: 0; }
+.cov-name { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; min-width: 0; }
+.cov-name code { font-weight: 500; }
+.cov-count { text-align: right; font-variant-numeric: tabular-nums; font-size: 0.875rem; }
+.cov-count.is-zero { color: var(--muted); }
+.cov-rule { grid-column: 1 / -1; margin: 0; font-size: 0.8125rem; color: var(--muted); }
+.cov-rule .src { color: var(--ink-2); }
+.chip { font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.02em; padding: 0.05rem 0.45rem; border-radius: 4px; white-space: nowrap; }
+.chip-mapped, .chip-fixed { background: var(--tint); color: var(--ink); }
+.chip-ambiguous { background: var(--chip); color: var(--ink); }
+.chip-nosource, .chip-unused { background: transparent; color: var(--muted); box-shadow: inset 0 0 0 1px var(--rule); }
+.meter { height: 8px; background: var(--track); border-radius: 4px; overflow: hidden; }
+.meter-fill { display: block; height: 100%; background: var(--series-1); border-radius: 0 4px 4px 0; }
+
+/* Horizontal bar lists */
+.bar-list { display: grid; gap: 0.35rem; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 0.75rem; align-items: center; padding: 0.1rem 0; }
+.bar-label { font-size: 0.8125rem; color: var(--ink-2); line-height: 1.3; overflow-wrap: anywhere; }
+.bar-row.is-blank .bar-label { font-style: italic; color: var(--muted); }
+.bar-cell { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+.bar {
+  display: block;
+  height: 14px;
+  width: calc((100% - 4rem) * var(--f));
+  min-width: 2px;
+  background: var(--series-1);
+  border-radius: 0 4px 4px 0;
+}
+.bar-row.is-blank .bar { background: var(--blank); }
+.bar-row:hover .bar { filter: brightness(1.12); }
+.bar-value { font-size: 0.75rem; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Price split */
+.stack { display: flex; gap: 2px; height: 22px; background: var(--surface); }
+.seg { flex-basis: 0; min-width: 2px; }
+.seg:last-child { border-radius: 0 4px 4px 0; }
+.seg.s1 { background: var(--series-1); }
+.seg.s2 { background: var(--series-2); }
+.seg.s3 { background: var(--series-3); }
+.seg.sx { background: var(--blank); }
+.seg:hover { filter: brightness(1.12); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin: 0; padding: 0; list-style: none; font-size: 0.8125rem; }
+.legend li { display: flex; align-items: baseline; gap: 0.45rem; }
+.swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; align-self: center; }
+.swatch.s1 { background: var(--series-1); }
+.swatch.s2 { background: var(--series-2); }
+.swatch.s3 { background: var(--series-3); }
+.swatch.sx { background: var(--blank); }
+.legend .num { font-weight: 600; font-variant-numeric: tabular-nums; }
+.legend .pct { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Histogram */
+.hist-plot { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); column-gap: 0.5rem; }
+.hist-y { position: relative; height: 180px; }
+.hist-y span { position: absolute; right: 0; transform: translateY(50%); font-size: 0.6875rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hist-area { position: relative; height: 180px; border-bottom: 1px solid var(--blank); }
+.hist-grid { position: absolute; left: 0; right: 0; height: 1px; background: var(--rule); }
+.hist-cols, .hist-x { display: flex; gap: 2px; height: 100%; position: relative; }
+.hist-slot { flex: 1 1 0; min-width: 0; display: flex; justify-content: center; align-items: flex-end; height: 100%; }
+.col { width: min(24px, 85%); background: var(--series-1); border-radius: 4px 4px 0 0; min-height: 0; }
+.hist-slot:hover .col, .hist-slot:focus-visible .col { filter: brightness(1.12); }
+.hist-x { height: auto; grid-column: 2; padding-top: 0.35rem; }
+.hist-x span { flex: 1 1 0; min-width: 0; text-align: center; font-size: 0.6875rem; color: var(--muted); white-space: nowrap; overflow: visible; font-variant-numeric: tabular-nums; }
+.hist-stats { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; margin: 0; font-size: 0.8125rem; color: var(--ink-2); }
+.hist-stats b { color: var(--ink); font-weight: 600; }
+
+/* Source column completeness */
+.src-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); column-gap: 2rem; }
+.src-row { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) 3.5rem; gap: 0.75rem; align-items: center; padding: 0.4rem 0; border-top: 1px solid var(--rule); }
+.src-row code { font-size: 0.8125rem; overflow-wrap: anywhere; }
+.src-row .cov-count { font-size: 0.8125rem; }
+
+/* Tables */
+details summary { cursor: pointer; font-size: 0.8125rem; color: var(--ink-2); width: fit-content; }
+details[open] summary { margin-bottom: 0.5rem; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 0.8125rem; padding: 0 1rem 0.45rem 0; border-bottom: 1px solid var(--rule); }
+td { padding: 0.5rem 1rem 0.5rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tooltip {
+  position: fixed;
+  z-index: 20;
+  pointer-events: none;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  display: grid;
+  gap: 0.05rem;
+  max-width: 18rem;
+  font-size: 0.8125rem;
+}
+.tooltip strong { font-weight: 600; font-variant-numeric: tabular-nums; }
+.tooltip span { color: var(--ink-2); }
+
+footer { color: var(--muted); font-size: 0.8125rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
+
+@media (max-width: 600px) {
+  .cov-row { grid-template-columns: minmax(0, 1fr) 4rem; }
+  .cov-name { grid-column: 1 / -1; }
+  .bar-row { grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr); }
+  .src-row { grid-template-columns: minmax(0, 1fr) 5rem 3rem; }
+}
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <p class="eyebrow">JewelCloud Timepieces export</p>
+    <h1>Oris catalogue to JewelCloud</h1>
+    <dl class="run-meta">
+      <div><dt>Generated</dt><dd id="meta-generated">—</dd></div>
+      <div><dt>Source API</dt><dd id="meta-source">—</dd></div>
+      <div><dt>CSV file</dt><dd id="meta-csv">—</dd></div>
+    </dl>
+  </header>
+
+  <p class="lede" id="no-data" hidden>This is the report template without data. Run the exporter to generate the report.</p>
+
+  <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <section aria-labelledby="coverage-title">
+    <div class="section-head">
+      <h2 id="coverage-title">Template coverage</h2>
+      <p class="lede">Rows populated for each Timepieces column, in template order. A blank column is blank on purpose; the line under it says why.</p>
+    </div>
+    <div class="filters" role="group" aria-label="Show columns">
+      <button type="button" id="filter-all" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" id="filter-filled" data-filter="filled" aria-pressed="false">Filled</button>
+      <button type="button" id="filter-blank" data-filter="blank" aria-pressed="false">Left blank</button>
+    </div>
+    <div class="panel"><div class="cov-list" id="coverage-list"></div></div>
+  </section>
+
+  <section aria-labelledby="values-title">
+    <div class="section-head">
+      <h2 id="values-title">Mapped values</h2>
+      <p class="lede">What the normalization rules produced. Every value comes from the template's accepted-value lists; grey bars are rows left blank.</p>
+    </div>
+    <div class="grid" id="mapped-values"></div>
+  </section>
+
+  <section aria-labelledby="price-title">
+    <div class="section-head">
+      <h2 id="price-title">Retail price</h2>
+      <p class="lede" id="price-lede"></p>
+    </div>
+    <div class="grid" id="price"></div>
+  </section>
+
+  <section aria-labelledby="source-only-title">
+    <div class="section-head">
+      <h2 id="source-only-title">Kept in SRC_ only</h2>
+      <p class="lede">Source fields that have a tempting JewelCloud column but no safe mapping. Their values are preserved unchanged in the SRC_ columns.</p>
+    </div>
+    <div class="grid" id="source-only-values"></div>
+  </section>
+
+  <section aria-labelledby="source-title">
+    <div class="section-head">
+      <h2 id="source-title">Source completeness</h2>
+      <p class="lede">Non-empty values in each SRC_ column. Nested JSON is flattened with an underscore, so <code>price.amount</code> becomes <code>SRC_price_amount</code>.</p>
+    </div>
+    <div class="panel"><div class="src-list" id="source-columns"></div></div>
+  </section>
+
+  <section aria-labelledby="quality-title">
+    <div class="section-head">
+      <h2 id="quality-title">Data quality</h2>
+      <p class="lede">Issues found in the source and how the export handles them, followed by every reason a mapped cell was left blank.</p>
+    </div>
+    <div class="grid">
+      <figure class="panel"><figcaption><h3>Source issues</h3></figcaption><div class="table-wrap" id="quality-table"></div></figure>
+      <figure class="panel"><figcaption><h3>Blank-value reasons</h3></figcaption><div class="table-wrap" id="reasons-table"></div></figure>
+    </div>
+  </section>
+
+  <footer>Generated by OrisJewelCloudExport on every run. All counts describe this run only; field-by-field reasoning is in MAPPING.md.</footer>
+</div>
+
+<div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+
+<script id="report-data" type="application/json">{"generatedAt":"2026-10-23T10:21:43.8328421+00:00","apiUrl":"https://product-api.oris.ch/api/watch/all","csvFileName":"oris-jewelcloud-timepieces.csv","recordCount":1765,"columns":[{"name":"IsActive","treatment":"Mapped","source":"isArchived","rule":"Archived \u2192 1 (inactive), otherwise 0 (active)","populated":1765},{"name":"ProductType","treatment":"Fixed","source":null,"rule":"0 (Simple Product), per the brief","populated":1765},{"name":"StyleNumber","treatment":"Mapped","source":"reference","rule":"Oris reference, trimmed","populated":1765},{"name":"RetailerStockNumber","treatment":"Mapped","source":"reference","rule":"Same as StyleNumber","populated":1765},{"name":"ProductName","treatment":"Mapped","source":"name","rule":"Trimmed","populated":1765},{"name":"ProductDescription","treatment":"Mapped","source":"description","rule":"Trimmed","populated":1765},{"name":"MetalType","treatment":"Mapped","source":"material","rule":"Case metal; steel with a solid 18K gold top ring \u2192 Steel: Stainless with Gold","populated":1737},{"name":"MetalColor","treatment":"Mapped","source":"material","rule":"Gold cases only, which name their colour (Rose, Yellow)","populated":11},{"name":"ImagePath","treatment":"Mapped","source":"imageUrl","rule":"Absolute URL with spaces encoded","populated":1765},{"name":"Collections","treatment":"Mapped","source":"collection","rule":"Trimmed","populated":1765},{"name":"Categories","treatment":"Fixed","source":null,"rule":"Watches: the endpoint only returns watches","populated":1765},{"name":"WatchBandMaterial","treatment":"NoSource","source":null,"rule":"No strap or bracelet field","populated":0},{"name":"WatchBandType","treatment":"NoSource","source":null,"rule":"No strap or bracelet field","populated":0},{"name":"WatchCaseMaterial","treatment":"Mapped","source":"material","rule":"Case metal; bronze, steel/bronze and carbon fibre have no accepted value","populated":1688},{"name":"WatchCaseShape","treatment":"NoSource","source":null,"rule":"No case shape field","populated":0},{"name":"WatchCrystalType","treatment":"NoSource","source":null,"rule":"No crystal field","populated":0},{"name":"WatchDialColor","treatment":"Ambiguous","source":"color","rule":"color may be the dial, strap or case colour","populated":0},{"name":"WatchDisplayType","treatment":"NoSource","source":null,"rule":"No display or complication field","populated":0},{"name":"WatchMovement","treatment":"Mapped","source":"winding","rule":"Automatic and hand winding \u2192 Mechanical","populated":1748},{"name":"WatchNumberType","treatment":"Ambiguous","source":"winding","rule":"Accepted values mix dial numerals with movement types","populated":0},{"name":"WatchEnergy","treatment":"Mapped","source":"winding","rule":"Automatic winding \u2192 Automatic; hand winding \u2192 Manual Mechanical","populated":1748},{"name":"Gender","treatment":"NoSource","source":null,"rule":"No gender field","populated":0},{"name":"PriceType","treatment":"Ambiguous","source":null,"rule":"Pricing policy is a retailer decision, not product data","populated":0},{"name":"DeliveryTime","treatment":"NoSource","source":null,"rule":"No delivery field; JewelCloud defaults to 2 Weeks","populated":0},{"name":"WatchSize","treatment":"Ambiguous","source":"size","rule":"Size is in mm; JewelCloud\u0027s Mini to Extra Extra Large ranges are not defined","populated":0},{"name":"WatchType","treatment":"Ambiguous","source":"collection","rule":"Could only be guessed from collection names","populated":0},{"name":"ImagePath2","treatment":"Mapped","source":"image2Url","rule":"Absolute URL with spaces encoded","populated":1764},{"name":"RetailPrice","treatment":"Mapped","source":"price.amount","rule":"Positive amount in the configured currency; active prices only unless configured","populated":353},{"name":"ExtendedField1","treatment":"Unused","source":null,"rule":"No agreed use","populated":0},{"name":"ExtendedField2","treatment":"Unused","source":null,"rule":"No agreed use","populated":0}],"mappedValues":[{"column":"IsActive","note":"Archived \u2192 1 (inactive), otherwise 0 (active)","values":[{"label":"1","count":1560},{"label":"0","count":205}]},{"column":"MetalType","note":"Case metal; steel with a solid 18K gold top ring \u2192 Steel: Stainless with Gold","values":[{"label":"Steel: Stainless","count":1547},{"label":"Titanium","count":100},{"label":"Bronze","count":40},{"label":"Steel: Stainless with Gold","count":30},{"label":"18K Rose Gold","count":9},{"label":"Carbon","count":9},{"label":"18K Gold","count":2},{"label":null,"count":28}]},{"column":"WatchCaseMaterial","note":"Case metal; bronze, steel/bronze and carbon fibre have no accepted value","values":[{"label":"Stainless Steel","count":1577},{"label":"Titanium","count":100},{"label":"Rose Gold","count":9},{"label":"Yellow Gold","count":2},{"label":null,"count":77}]},{"column":"WatchEnergy","note":"Automatic winding \u2192 Automatic; hand winding \u2192 Manual Mechanical","values":[{"label":"Automatic","count":1672},{"label":"Manual Mechanical","count":76},{"label":null,"count":17}]},{"column":"WatchMovement","note":"Automatic and hand winding \u2192 Mechanical","values":[{"label":"Mechanical","count":1748},{"label":null,"count":17}]},{"column":"Collections","note":"Trimmed","values":[{"label":"Artelier","count":364},{"label":"Aquis","count":292},{"label":"Big Crown","count":238},{"label":"Divers","count":217},{"label":"ProPilot","count":184},{"label":"Classic","count":108},{"label":"Williams","count":61},{"label":"Artix GT","count":54},{"label":"Artix","count":51},{"label":"BC3","count":28},{"label":"TT1","count":25},{"label":"17 other values","count":143}]}],"sourceOnlyValues":[{"column":"color","note":"Not mapped to WatchDialColor: color may be the dial, strap or case colour.","values":[{"label":"Black","count":623},{"label":"Grey","count":595},{"label":"Blue","count":228},{"label":"White","count":137},{"label":"Green","count":93},{"label":"Brown","count":34},{"label":"Red","count":25},{"label":"Pink","count":11},{"label":"Multicoloured","count":9},{"label":"Purple","count":7},{"label":"Yellow","count":2},{"label":"Skeleton","count":1}]},{"column":"size","note":"Not mapped to WatchSize: Size is in mm; JewelCloud\u0027s Mini to Extra Extra Large ranges are not defined.","values":[{"label":"40.00 mm","count":330},{"label":"42.00 mm","count":211},{"label":"44.00 mm","count":164},{"label":"43.00 mm","count":98},{"label":"43.50 mm","count":94},{"label":"38.00 mm","count":74},{"label":"40.50 mm","count":73},{"label":"36.00 mm","count":66},{"label":"41.50 mm","count":61},{"label":"31.00 mm","count":57},{"label":"45.00 mm","count":53},{"label":"32 other values","count":484}]}],"price":{"currency":"USD","includeInactivePrices":false,"exported":353,"excludedInactive":1256,"missingPrice":156,"otherCurrency":0,"invalidAmount":0,"exportedAmounts":[2400.00,2200.00,2400.00,2200.00,2400.00,2200.00,2200.00,2600.00,2600.00,2600.00,2700.00,2200.00,2500.00,2200.00,2200.00,2200.00,2500.00,2200.00,2200.00,2700.00,2500.00,2200.00,2600.00,2350.00,2850.00,2600.00,2600.00,2400.00,2600.00,2400.00,2400.00,2400.00,2600.00,2200.00,2400.00,2400.00,2600.00,2400.00,2450.00,2600.00,2400.00,2600.00,2450.00,2600.00,2400.00,2600.00,2450.00,2300.00,2400.00,2400.00,2500.00,2600.00,2400.00,2600.00,2700.00,2700.00,2600.00,2600.00,2600.00,2700.00,2700.00,5700.00,5900.00,2550.00,2400.00,2600.00,2400.00,2600.00,2550.00,2550.00,2800.00,2800.00,2800.00,2800.00,2600.00,2800.00,2800.00,2900.00,2900.00,2800.00,2900.00,2600.00,2800.00,2600.00,2600.00,2600.00,2800.00,2600.00,3000.00,2800.00,4400.00,4600.00,2800.00,2800.00,3000.00,2900.00,2600.00,2950.00,4500.00,4300.00,2700.00,2800.00,3300.00,5000.00,2400.00,2400.00,2400.00,2600.00,2400.00,2400.00,2600.00,2400.00,2600.00,2400.00,2800.00,2600.00,2600.00,2900.00,2600.00,2900.00,2600.00,2900.00,2900.00,3000.00,2950.00,3150.00,2950.00,3150.00,2950.00,3150.00,2700.00,2200.00,2700.00,2700.00,2700.00,2700.00,2700.00,2300.00,2750.00,2850.00,2850.00,3100.00,3000.00,2650.00,2650.00,2850.00,2600.00,2850.00,2850.00,2900.00,2700.00,2600.00,7400.00,7200.00,7400.00,7200.00,8000.00,7800.00,7600.00,7600.00,2000.00,3700.00,3950.00,3700.00,3950.00,3550.00,3750.00,3550.00,2600.00,2900.00,2900.00,2900.00,3400.00,3400.00,2600.00,3400.00,2100.00,2100.00,2150.00,2300.00,2600.00,2600.00,2600.00,2400.00,4600.00,4400.00,4700.00,4500.00,4700.00,4500.00,3000.00,3000.00,3000.00,9000.00,9400.00,9600.00,10500.00,3900.00,3700.00,3700.00,3900.00,3700.00,3900.00,3700.00,3900.00,5150.00,4950.00,5150.00,4950.00,3700.00,3900.00,4400.00,4300.00,4300.00,4100.00,4100.00,4000.00,3800.00,4000.00,3800.00,4750.00,4000.00,4300.00,4500.00,30400.00,4800.00,4800.00,4800.00,5100.00,5750.00,4300.00,18900.00,5200.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,2600.00,5000.00,5200.00,6800.00,6800.00,8100.00,6900.00,4100.00,2300.00,3500.00,2600.00,2850.00,2700.00,2950.00,3100.00,3400.00,2850.00,2900.00,3400.00,3100.00,3400.00,3100.00,3400.00,3100.00,3100.00,3100.00,3100.00,3400.00,2750.00,2950.00,2950.00,2750.00,2750.00,2950.00,4100.00,4300.00,4100.00,2350.00,2550.00,2350.00,2550.00,2350.00,3500.00,2550.00,2750.00,2800.00,2800.00,2800.00,2800.00,2950.00,3300.00,4500.00,4300.00,4500.00,4300.00,2400.00,2400.00,2400.00,2400.00,3300.00,2300.00,5000.00,8100.00,7900.00,2300.00,4600.00]},"sourceColumns":[{"name":"SRC_id","filled":1765},{"name":"SRC_familyId","filled":1765},{"name":"SRC_reference","filled":1765},{"name":"SRC_imageUrl","filled":1765},{"name":"SRC_image2Url","filled":1764},{"name":"SRC_family","filled":1765},{"name":"SRC_calibre","filled":1748},{"name":"SRC_winding","filled":1748},{"name":"SRC_powerReserve","filled":1748},{"name":"SRC_collection","filled":1765},{"name":"SRC_price_priceType","filled":1609},{"name":"SRC_price_currency","filled":1609},{"name":"SRC_price_amount","filled":1609},{"name":"SRC_price_active","filled":1609},{"name":"SRC_description","filled":1765},{"name":"SRC_isArchived","filled":1765},{"name":"SRC_hasStock","filled":1765},{"name":"SRC_productLink","filled":1765},{"name":"SRC_material","filled":1765},{"name":"SRC_color","filled":1765},{"name":"SRC_size","filled":1765},{"name":"SRC_name","filled":1765},{"name":"SRC_limitedEdition","filled":1765}],"quality":[{"issue":"Leading or trailing whitespace","records":1031,"handling":"Trimmed in mapped columns; kept verbatim in SRC_"},{"issue":"Line break inside a value","records":84,"handling":"Trimmed in mapped columns; quoted in the CSV"},{"issue":"Double quote inside a value","records":6,"handling":"Escaped as \u0022\u0022 in the CSV"},{"issue":"Non-ASCII characters","records":24,"handling":"Kept; the CSV is UTF-8 with BOM"},{"issue":"Image URL contains spaces","records":1086,"handling":"Percent-encoded in ImagePath and ImagePath2"}],"blankReasons":[{"column":"MetalType","reason":"no accepted value for \u0027stainless steel/bronze\u0027","count":28},{"column":"RetailPrice","reason":"price.active is not true (IncludeInactivePrices = false)","count":1256},{"column":"RetailPrice","reason":"no price in source","count":156},{"column":"WatchCaseMaterial","reason":"no accepted value for \u0027bronze\u0027","count":40},{"column":"WatchCaseMaterial","reason":"no accepted value for \u0027stainless steel/bronze\u0027","count":28},{"column":"WatchCaseMaterial","reason":"no accepted value for \u0027carbon fibre\u0027","count":9}]}</script>
+<script>
+(() => {
+  'use strict';
+
+  const raw = document.getElementById('report-data').textContent.trim();
+  if (raw === '__REPORT' + '_DATA__') {
+    document.getElementById('no-data').hidden = false;
+    return;
+  }
+  const data = JSON.parse(raw);
+  const total = data.recordCount;
+
+  const nf = new Intl.NumberFormat('en-US');
+  const n = v => nf.format(v);
+  const pctText = (v, of) => {
+    if (!of) return '0%';
+    const p = (v / of) * 100;
+    if (p > 0 && p < 1) return '<1%';
+    if (p > 99 && v < of) return '>99%';
+    return Math.round(p) + '%';
+  };
+  const money = v => (data.price.currency === 'USD' ? '$' : data.price.currency + ' ') + nf.format(v);
+  const compactMoney = v => {
+    const prefix = data.price.currency === 'USD' ? '$' : '';
+    return v >= 1000 ? prefix + (Math.round(v / 100) / 10) + 'K' : prefix + v;
+  };
+
+  const TREATMENT = { Mapped: 'Mapped', Fixed: 'Fixed', Ambiguous: 'Ambiguous', NoSource: 'No source', Unused: 'Unused' };
+  const VALUE_LABELS = { IsActive: { '0': '0 · active', '1': '1 · inactive (archived)' } };
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+  }
+
+  // Tooltip: every value it shows is also visible on the page or in a table view.
+  const tipEl = document.getElementById('tooltip');
+  function setTip(target, value, label) {
+    target.dataset.tipValue = value;
+    target.dataset.tipLabel = label;
+  }
+  function showTip(target, x, y) {
+    tipEl.replaceChildren(el('strong', null, target.dataset.tipValue), el('span', null, target.dataset.tipLabel));
+    tipEl.hidden = false;
+    const box = tipEl.getBoundingClientRect();
+    let left = x + 14;
+    let top = y + 14;
+    if (left + box.width > window.innerWidth - 8) left = x - box.width - 14;
+    if (top + box.height > window.innerHeight - 8) top = y - box.height - 14;
+    tipEl.style.left = Math.max(8, left) + 'px';
+    tipEl.style.top = Math.max(8, top) + 'px';
+  }
+  document.addEventListener('pointermove', e => {
+    const target = e.target instanceof Element ? e.target.closest('[data-tip-value]') : null;
+    if (target) showTip(target, e.clientX, e.clientY);
+    else tipEl.hidden = true;
+  });
+  document.addEventListener('focusin', e => {
+    const target = e.target instanceof Element ? e.target.closest('[data-tip-value]') : null;
+    if (!target) return;
+    const r = target.getBoundingClientRect();
+    showTip(target, r.left + r.width / 2, r.top);
+  });
+  document.addEventListener('focusout', () => { tipEl.hidden = true; });
+  window.addEventListener('scroll', () => { tipEl.hidden = true; }, { passive: true });
+
+  // Masthead
+  document.getElementById('meta-generated').textContent =
+    new Date(data.generatedAt).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+  document.getElementById('meta-source').textContent = data.apiUrl;
+  document.getElementById('meta-csv').textContent = data.csvFileName;
+
+  // KPI strip
+  const filledColumns = data.columns.filter(c => c.populated > 0).length;
+  const kpis = [
+    { label: 'Watches exported', value: n(total), note: 'One CSV row per Oris reference' },
+    { label: 'Template columns filled', value: String(filledColumns), of: '/ ' + data.columns.length,
+      note: (data.columns.length - filledColumns) + ' left blank on purpose' },
+    { label: 'Rows with a retail price', value: n(data.price.exported),
+      note: data.price.includeInactivePrices ? 'All ' + data.price.currency + ' prices' : 'Active ' + data.price.currency + ' prices only' },
+    { label: 'Source fields preserved', value: n(data.sourceColumns.length), note: 'As SRC_ columns, values unchanged' },
+  ];
+  const kpiRoot = document.getElementById('kpis');
+  for (const k of kpis) {
+    const tile = el('div', 'kpi');
+    const value = el('div', 'kpi-value', k.value);
+    if (k.of) value.append(el('small', null, k.of));
+    tile.append(el('div', 'kpi-label', k.label), value, el('div', 'kpi-note', k.note));
+    kpiRoot.append(tile);
+  }
+
+  // Coverage
+  const coverageList = document.getElementById('coverage-list');
+  const counts = { all: data.columns.length, filled: filledColumns, blank: data.columns.length - filledColumns };
+  function renderCoverage(filter) {
+    coverageList.replaceChildren();
+    for (const c of data.columns) {
+      const isFilled = c.populated > 0;
+      if ((filter === 'filled' && !isFilled) || (filter === 'blank' && isFilled)) continue;
+
+      const row = el('div', 'cov-row');
+      const name = el('div', 'cov-name');
+      name.append(el('code', null, c.name), el('span', 'chip chip-' + c.treatment.toLowerCase(), TREATMENT[c.treatment] || c.treatment));
+
+      const meter = el('div', 'meter');
+      meter.setAttribute('role', 'img');
+      meter.setAttribute('aria-label', c.name + ': ' + n(c.populated) + ' of ' + n(total) + ' rows populated');
+      const fill = el('span', 'meter-fill');
+      fill.style.width = (total ? (c.populated / total) * 100 : 0) + '%';
+      meter.append(fill);
+
+      const count = el('div', 'cov-count' + (isFilled ? '' : ' is-zero'), n(c.populated));
+      const rule = el('p', 'cov-rule');
+      if (c.source) {
+        rule.append(el('code', 'src', c.source), document.createTextNode(' · '));
+      }
+      rule.append(document.createTextNode(c.rule));
+
+      row.append(name, meter, count, rule);
+      coverageList.append(row);
+    }
+  }
+  const filterButtons = document.querySelectorAll('[data-filter]');
+  filterButtons.forEach(button => {
+    button.append(el('span', 'count', String(counts[button.dataset.filter])));
+    button.addEventListener('click', () => {
+      filterButtons.forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+      renderCoverage(button.dataset.filter);
+    });
+  });
+  renderCoverage('all');
+
+  // Horizontal bar list for one column's value counts
+  function barList(breakdown, title) {
+    const figure = el('figure', 'panel');
+    const caption = el('figcaption');
+    const heading = el('h3');
+    heading.append(el('code', null, title));
+    caption.append(heading, el('p', 'note', breakdown.note));
+    figure.append(caption);
+
+    const list = el('div', 'bar-list');
+    const max = Math.max(1, ...breakdown.values.map(v => v.count));
+    const labels = VALUE_LABELS[breakdown.column] || {};
+    for (const v of breakdown.values) {
+      const isBlank = v.label === null;
+      const labelText = isBlank ? '(blank)' : (labels[v.label] || v.label);
+      const row = el('div', 'bar-row' + (isBlank ? ' is-blank' : ''));
+      const cell = el('span', 'bar-cell');
+      const bar = el('span', 'bar');
+      bar.style.setProperty('--f', (v.count / max).toFixed(4));
+      cell.append(bar, el('span', 'bar-value', n(v.count)));
+      row.append(el('span', 'bar-label', labelText), cell);
+      setTip(row, n(v.count) + ' rows · ' + pctText(v.count, total), labelText);
+      list.append(row);
+    }
+    figure.append(list);
+    return figure;
+  }
+
+  const mappedRoot = document.getElementById('mapped-values');
+  for (const b of data.mappedValues) mappedRoot.append(barList(b, b.column));
+  const sourceOnlyRoot = document.getElementById('source-only-values');
+  for (const b of data.sourceOnlyValues) sourceOnlyRoot.append(barList(b, 'SRC_' + b.column));
+
+  // Retail price
+  const p = data.price;
+  document.getElementById('price-lede').textContent =
+    'RetailPrice comes from price.amount when the currency is ' + p.currency +
+    (p.includeInactivePrices ? '. Inactive prices are included by configuration.' :
+      ' and Oris marks the price as active. Inactive prices stay in SRC_price_amount.');
+
+  function priceSplit() {
+    const figure = el('figure', 'panel');
+    const caption = el('figcaption');
+    caption.append(el('h3', null, 'Where each watch’s price went'), el('p', 'note', n(total) + ' watches, one segment per outcome.'));
+    const segments = [
+      { label: 'Exported as RetailPrice', count: p.exported, cls: 's1' },
+      { label: 'Inactive price, excluded', count: p.excludedInactive, cls: 's2' },
+      { label: 'No price in source', count: p.missingPrice, cls: 's3' },
+      { label: 'Not in ' + p.currency, count: p.otherCurrency, cls: 'sx' },
+      { label: 'Invalid amount', count: p.invalidAmount, cls: 'sx' },
+    ].filter(s => s.count > 0);
+
+    const stack = el('div', 'stack');
+    stack.setAttribute('role', 'img');
+    stack.setAttribute('aria-label', segments.map(s => s.label + ' ' + n(s.count)).join(', '));
+    const legend = el('ul', 'legend');
+    for (const s of segments) {
+      const seg = el('span', 'seg ' + s.cls);
+      seg.style.flexGrow = String(s.count);
+      setTip(seg, n(s.count) + ' watches · ' + pctText(s.count, total), s.label);
+      stack.append(seg);
+
+      const item = el('li');
+      item.append(el('span', 'swatch ' + s.cls), el('span', null, s.label), el('span', 'num', n(s.count)), el('span', 'pct', pctText(s.count, total)));
+      legend.append(item);
+    }
+    figure.append(caption, stack, legend);
+    return figure;
+  }
+
+  function niceStep(x) {
+    const power = Math.pow(10, Math.floor(Math.log10(Math.max(x, 1))));
+    for (const m of [1, 2, 5, 10]) if (m * power >= x) return m * power;
+    return 10 * power;
+  }
+
+  function priceHistogram() {
+    const figure = el('figure', 'panel');
+    const caption = el('figcaption');
+    const captionNote = el('p', 'note', 'Watches per ' + p.currency + ' price band.');
+    caption.append(el('h3', null, 'Exported prices'), captionNote);
+    figure.append(caption);
+
+    const amounts = p.exportedAmounts.map(Number).sort((a, b) => a - b);
+    if (!amounts.length) {
+      figure.append(el('p', 'note', 'No prices were exported in this run.'));
+      return figure;
+    }
+    const min = amounts[0];
+    const max = amounts[amounts.length - 1];
+    const mid = amounts.length / 2;
+    const median = amounts.length % 2 ? amounts[Math.floor(mid)] : (amounts[mid - 1] + amounts[mid]) / 2;
+
+    // Bands cover up to the 98th percentile; the few prices above it share one open-ended band,
+    // so a single very expensive watch does not flatten the rest of the distribution.
+    const p98 = amounts[Math.min(amounts.length - 1, Math.floor(amounts.length * 0.98))];
+    const step = [50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000].find(s => (p98 - min) / s <= 12) || 100000;
+    const start = Math.floor(min / step) * step;
+    const top = Math.ceil((p98 + 1) / step) * step;
+    const regularCount = Math.max(1, Math.round((top - start) / step));
+    const bins = Array.from({ length: regularCount }, (_, i) => ({ from: start + i * step, to: start + (i + 1) * step, count: 0 }));
+    const overflow = { from: top, to: null, count: 0 };
+    for (const a of amounts) {
+      if (a >= top) overflow.count++;
+      else bins[Math.floor((a - start) / step)].count++;
+    }
+    if (overflow.count > 0) {
+      bins.push(overflow);
+      captionNote.textContent += ' The last band groups the ' + n(overflow.count) + ' prices of ' + money(top) + ' and above.';
+    }
+    const binCount = bins.length;
+    const rangeText = b => b.to === null ? money(b.from) + ' and above' : money(b.from) + '–' + money(b.to - 1);
+
+    const peak = Math.max(...bins.map(b => b.count));
+    const yStep = niceStep(peak / 4);
+    const yMax = Math.ceil(peak / yStep) * yStep;
+
+    const plot = el('div', 'hist-plot');
+    const yAxis = el('div', 'hist-y');
+    yAxis.setAttribute('aria-hidden', 'true');
+    const area = el('div', 'hist-area');
+    for (let v = 0; v <= yMax; v += yStep) {
+      const label = el('span', null, n(v));
+      label.style.bottom = (v / yMax) * 100 + '%';
+      yAxis.append(label);
+      if (v > 0) {
+        const line = el('div', 'hist-grid');
+        line.style.bottom = (v / yMax) * 100 + '%';
+        area.append(line);
+      }
+    }
+    const cols = el('div', 'hist-cols');
+    const xAxis = el('div', 'hist-x');
+    xAxis.setAttribute('aria-hidden', 'true');
+    const labelEvery = Math.ceil(binCount / (window.innerWidth < 600 ? 4 : 7));
+    bins.forEach((b, i) => {
+      const slot = el('div', 'hist-slot');
+      const range = rangeText(b);
+      slot.tabIndex = 0;
+      slot.setAttribute('aria-label', range + ': ' + n(b.count) + ' watches');
+      setTip(slot, n(b.count) + ' watches', range);
+      const col = el('div', 'col');
+      col.style.height = (b.count / yMax) * 100 + '%';
+      slot.append(col);
+      cols.append(slot);
+      const isLabelled = i % labelEvery === 0 || b.to === null;
+      xAxis.append(el('span', null, isLabelled ? compactMoney(b.from) + (b.to === null ? '+' : '') : ''));
+    });
+    area.append(cols);
+    plot.append(yAxis, area, xAxis);
+
+    const stats = el('p', 'hist-stats');
+    for (const [label, value] of [['Lowest', min], ['Median', median], ['Highest', max]]) {
+      const item = el('span', null, label + ' ');
+      item.append(el('b', null, money(value)));
+      stats.append(item);
+    }
+
+    const details = el('details');
+    details.append(el('summary', null, 'Table view'));
+    const wrap = el('div', 'table-wrap');
+    wrap.append(table(['Price band', 'Watches'], bins.map(b => [rangeText(b), n(b.count)]), [1]));
+    details.append(wrap);
+
+    figure.append(plot, stats, details);
+    return figure;
+  }
+
+  function table(headers, rows, numericColumns) {
+    const t = el('table');
+    const head = el('tr');
+    headers.forEach((h, i) => head.append(el('th', numericColumns.includes(i) ? 'num' : null, h)));
+    const thead = el('thead');
+    thead.append(head);
+    const tbody = el('tbody');
+    for (const r of rows) {
+      const tr = el('tr');
+      r.forEach((cell, i) => {
+        const td = el('td', numericColumns.includes(i) ? 'num' : null);
+        if (cell instanceof Node) td.append(cell); else td.textContent = cell;
+        tr.append(td);
+      });
+      tbody.append(tr);
+    }
+    t.append(thead, tbody);
+    return t;
+  }
+
+  const priceRoot = document.getElementById('price');
+  priceRoot.append(priceSplit(), priceHistogram());
+
+  // Source completeness
+  const sourceRoot = document.getElementById('source-columns');
+  for (const c of data.sourceColumns) {
+    const row = el('div', 'src-row');
+    const meter = el('div', 'meter');
+    meter.setAttribute('role', 'img');
+    meter.setAttribute('aria-label', c.name + ': ' + n(c.filled) + ' of ' + n(total) + ' non-empty');
+    const fill = el('span', 'meter-fill');
+    fill.style.width = (total ? (c.filled / total) * 100 : 0) + '%';
+    meter.append(fill);
+    row.append(el('code', null, c.name), meter, el('div', 'cov-count', n(c.filled)));
+    sourceRoot.append(row);
+  }
+
+  // Tables
+  document.getElementById('quality-table').append(
+    data.quality.length
+      ? table(['Issue', 'Records', 'Handling'], data.quality.map(q => [q.issue, n(q.records), q.handling]), [1])
+      : el('p', 'note', 'No issues found.'));
+
+  document.getElementById('reasons-table').append(
+    data.blankReasons.length
+      ? table(['Column', 'Reason', 'Rows'], data.blankReasons.map(r => [el('code', null, r.column), r.reason, n(r.count)]), [2])
+      : el('p', 'note', 'No mapped cell was left blank.'));
+})();
+</script>
